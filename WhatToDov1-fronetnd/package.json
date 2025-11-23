@@ -10,6 +10,7 @@
     "test": "jest",
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
+    "generate": "npm run build",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
