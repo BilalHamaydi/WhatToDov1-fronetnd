@@ -15,7 +15,7 @@ const loading = ref(false)
 const error = ref('')
 
 // Ersetze diese URL durch deine Render-Backend-URL!
-const apiUrl = 'https://DEIN-BACKEND-NAME.onrender.com/todos'
+const apiUrl = 'https://whattodov1.onrender.com'
 
 // 3. Laden der Todos beim Start
 onMounted(loadTodos)
