@@ -1,34 +1,84 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-const todos = ref([
-  { id: 1, text: 'Einkaufen gehen', done: false },
-  { id: 2, text: 'Vue lernen', done: true },
-  { id: 3, text: 'Projekt starten', done: false },
-])
+// Ersetze diese URL durch die Render-Backend-URL!
+const apiUrl = 'https://DEIN-BACKEND-NAME.onrender.com/things'
 
+const todos = ref([])
 const newTodo = ref('')
+const loading = ref(false)
+const error = ref('')
+
+function loadTodos() {
+  loading.value = true
+  fetch(apiUrl)
+    .then(response => {
+      if (!response.ok) throw new Error('Backend nicht erreichbar')
+      return response.json()
+    })
+    .then(data => {
+      todos.value = data
+      error.value = ''
+    })
+    .catch(err => {
+      error.value = 'Fehler: ' + err.message
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
 
 function addTodo() {
   const text = newTodo.value.trim()
   if (text) {
-    todos.value.push({
-      id: Date.now(),
-      text,
-      done: false,
+    fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text, done: false }),
     })
-    newTodo.value = ''
+      .then(response => {
+        if (!response.ok) throw new Error('Fehler beim Speichern')
+        return response.json()
+      })
+      .then(todo => {
+        todos.value.push(todo)
+        newTodo.value = ''
+        error.value = ''
+      })
+      .catch(err => {
+        error.value = 'Fehler: ' + err.message
+      })
   }
 }
 
 function deleteTodo(id: number) {
-  todos.value = todos.value.filter(t => t.id !== id)
+  fetch(`${apiUrl}/${id}`, {
+    method: 'DELETE',
+  })
+    .then(response => {
+      if (!response.ok) throw new Error('Fehler beim Löschen')
+      return response.json()
+    })
+    .then(() => {
+      todos.value = todos.value.filter(t => t.id !== id)
+      error.value = ''
+    })
+    .catch(err => {
+      error.value = 'Fehler: ' + err.message
+    })
 }
+
+// Lade die Aufgaben beim Laden der Seite
+onMounted(loadTodos)
 </script>
 
 <template>
   <div class="todo-container">
     <h2>🗒️ Meine To-Do-Liste</h2>
+    <div v-if="loading">Lade Aufgaben...</div>
+    <div v-if="error" style="color:red">{{ error }}</div>
 
     <div class="input-row">
       <input
@@ -50,10 +100,8 @@ function deleteTodo(id: number) {
       <tbody>
         <tr v-for="todo in todos" :key="todo.id">
           <td>
-            <!-- v-model bindet automatisch an todo.done -->
             <input type="checkbox" v-model="todo.done" />
           </td>
-          <!-- Dynamische Klasse für Durchstreichen -->
           <td :class="{ done: todo.done }">{{ todo.text }}</td>
           <td>
             <button class="delete-btn" @click="deleteTodo(todo.id)">🗑️</button>
@@ -130,7 +178,6 @@ tr:nth-child(even) {
   background-color: #2a2a2a;
 }
 
-/* Durchgestrichene Aufgaben */
 .done {
   text-decoration: line-through;
   color: #aaa;
