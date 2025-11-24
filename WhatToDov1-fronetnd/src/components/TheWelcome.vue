@@ -68,17 +68,17 @@ function addTodo() {
 function deleteTodo(id: number) {
   fetch(`${apiUrl}/${id}`, { method: 'DELETE' })
     .then(response => {
-      if (!response.ok) throw new Error('Fehler beim Löschen')
-      return response.json()
-    })
-    .then(() => {
-      todos.value = todos.value.filter(t => t.id !== id)
-      error.value = ''
+      if (!response.ok) throw new Error('Fehler beim Löschen');
+      todos.value = todos.value.filter(t => t.id !== id);
+      error.value = '';
     })
     .catch(err => {
-      error.value = 'Fehler: ' + err.message
-    })
+      error.value = 'Fehler: ' + err.message;
+    });
 }
+
+
+
 </script>
 
 <template>
