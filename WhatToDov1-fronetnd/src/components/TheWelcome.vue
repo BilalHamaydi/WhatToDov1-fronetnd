@@ -49,19 +49,20 @@ function addTodo() {
       body: JSON.stringify({ text, done: false }),
     })
       .then(response => {
-        if (!response.ok) throw new Error('Fehler beim Speichern')
-        return response.json()
+        if (!response.ok) throw new Error('Fehler beim Speichern');
+        return response.json();
       })
       .then((todo: Todo) => {
-        todos.value.push(todo)
-        newTodo.value = ''
-        error.value = ''
+        todos.value.push(todo);
+        newTodo.value = '';
+        error.value = '';
       })
       .catch(err => {
-        error.value = 'Fehler: ' + err.message
-      })
+        error.value = 'Fehler: ' + err.message;
+      });
   }
 }
+
 
 // 5. Löschen
 function deleteTodo(id: number) {
