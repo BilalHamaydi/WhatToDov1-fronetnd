@@ -1,30 +1,52 @@
-<!-- App.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { RouterView } from 'vue-router'
 
-// Darkmode var + Umschalter
 const darkMode = ref(false)
 
+// Theme per Button setzen
 function toggleTheme() {
   darkMode.value = !darkMode.value
-  document.documentElement.classList.toggle('dark', darkMode.value)
 }
+
+// Theme dynamisch auf <html> anwenden
+watch(darkMode, (isDark) => {
+  document.documentElement.classList.toggle('dark', isDark)
+})
 </script>
 
 <template>
-  <!-- Theme-Button oben links -->
   <button @click="toggleTheme"
-          style="position:fixed;top:20px;left:20px;z-index:100;background:#eee;border-radius:6px;padding:7px 12px;">
+    style="
+      position: fixed;
+      top: 24px;
+      left: 24px;
+      z-index: 10;
+      background: #f2f2f2;
+      color: #222;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 1rem;
+      box-shadow: 0 2px 8px #0001;
+      cursor: pointer;
+      transition: background 0.4s, color 0.4s;
+    ">
     {{ darkMode ? '☀️ Lightmode' : '🌙 Darkmode' }}
   </button>
 
-  <!-- Zentrierte To-Do-Liste -->
-  <div style="display:flex;justify-content:center;align-items:center;min-height:100vh;">
+  <main class="centered-content">
     <RouterView />
-  </div>
+  </main>
 </template>
 
 <style scoped>
-/* Kein spezieller Style nötig, alles basis in main.css/base.css */
+.centered-content {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Extra Padding für große Card */
+}
 </style>
