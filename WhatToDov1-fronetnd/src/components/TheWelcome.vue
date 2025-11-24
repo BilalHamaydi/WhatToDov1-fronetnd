@@ -1,13 +1,24 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
-// Ersetze diese URL durch die Render-Backend-URL!
-const apiUrl = 'https://DEIN-BACKEND-NAME.onrender.com/things'
+// 1. Typ-Interface definieren
+interface Todo {
+  id: number;
+  text: string;
+  done: boolean;
+}
 
-const todos = ref([])
+// 2. State mit Typ verwenden!
+const todos = ref<Todo[]>([])
 const newTodo = ref('')
 const loading = ref(false)
 const error = ref('')
+
+// Ersetze diese URL durch deine Render-Backend-URL!
+const apiUrl = 'https://DEIN-BACKEND-NAME.onrender.com/todos'
+
+// 3. Laden der Todos beim Start
+onMounted(loadTodos)
 
 function loadTodos() {
   loading.value = true
@@ -16,7 +27,7 @@ function loadTodos() {
       if (!response.ok) throw new Error('Backend nicht erreichbar')
       return response.json()
     })
-    .then(data => {
+    .then((data: Todo[]) => {
       todos.value = data
       error.value = ''
     })
@@ -28,21 +39,20 @@ function loadTodos() {
     })
 }
 
+// 4. Hinzufügen
 function addTodo() {
   const text = newTodo.value.trim()
   if (text) {
     fetch(apiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, done: false }),
     })
       .then(response => {
         if (!response.ok) throw new Error('Fehler beim Speichern')
         return response.json()
       })
-      .then(todo => {
+      .then((todo: Todo) => {
         todos.value.push(todo)
         newTodo.value = ''
         error.value = ''
@@ -53,10 +63,9 @@ function addTodo() {
   }
 }
 
+// 5. Löschen
 function deleteTodo(id: number) {
-  fetch(`${apiUrl}/${id}`, {
-    method: 'DELETE',
-  })
+  fetch(`${apiUrl}/${id}`, { method: 'DELETE' })
     .then(response => {
       if (!response.ok) throw new Error('Fehler beim Löschen')
       return response.json()
@@ -69,9 +78,6 @@ function deleteTodo(id: number) {
       error.value = 'Fehler: ' + err.message
     })
 }
-
-// Lade die Aufgaben beim Laden der Seite
-onMounted(loadTodos)
 </script>
 
 <template>
@@ -123,25 +129,9 @@ onMounted(loadTodos)
   border-radius: 10px;
   box-shadow: 0 0 10px #00000044;
 }
-
-h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.input-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 1rem;
-}
-
-input[type="text"] {
-  flex: 1;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: none;
-}
-
+h2 { text-align: center; margin-bottom: 1rem; }
+.input-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+input[type="text"] { flex: 1; padding: 6px 8px; border-radius: 6px; border: none; }
 button {
   background-color: #4caf50;
   color: white;
@@ -151,35 +141,11 @@ button {
   cursor: pointer;
   transition: background-color 0.2s;
 }
-
-button:hover {
-  background-color: #45a049;
-}
-
-.delete-btn {
-  background-color: #e74c3c;
-}
-
-.delete-btn:hover {
-  background-color: #c0392b;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 6px;
-  text-align: left;
-}
-
-tr:nth-child(even) {
-  background-color: #2a2a2a;
-}
-
-.done {
-  text-decoration: line-through;
-  color: #aaa;
-}
+button:hover { background-color: #45a049; }
+.delete-btn { background-color: #e74c3c; }
+.delete-btn:hover { background-color: #c0392b; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 6px; text-align: left; }
+tr:nth-child(even) { background-color: #2a2a2a; }
+.done { text-decoration: line-through; color: #aaa; }
 </style>
