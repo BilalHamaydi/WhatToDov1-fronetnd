@@ -4,8 +4,9 @@ import { ref, onMounted } from 'vue'
 // 1. Typ-Interface definieren
 interface Todo {
   id: number;
-  text: string;
+  taskName: string;
   done: boolean;
+  important: boolean;
 }
 
 // 2. State mit Typ verwenden!
@@ -15,7 +16,7 @@ const loading = ref(false)
 const error = ref('')
 
 // Ersetze diese URL durch deine Render-Backend-URL!
-const apiUrl = 'https://whattodov1.onrender.com/todos'
+const apiUrl = 'https://whattodov1.onrender.com/tasks'
 
 // 3. Laden der Todos beim Start
 onMounted(loadTodos)
@@ -46,7 +47,12 @@ function addTodo() {
     fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, done: false }),
+      body: JSON.stringify({
+        taskName: text,
+        important: false,
+        done: false
+      }),
+
     })
       .then(response => {
         if (!response.ok) throw new Error('Fehler beim Speichern');
@@ -110,7 +116,7 @@ function deleteTodo(id: number) {
           <td>
             <input type="checkbox" v-model="todo.done" />
           </td>
-          <td :class="{ done: todo.done }">{{ todo.text }}</td>
+          <td :class="{ done: todo.done }">{{ todo.taskName }}</td>
           <td>
             <button class="delete-btn" @click="deleteTodo(todo.id)">🗑️</button>
           </td>
