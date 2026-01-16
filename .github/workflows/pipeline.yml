@@ -19,5 +19,6 @@ jobs:
       - name: Install dependencies
         run: cd WhatToDov1-fronetnd && npm ci
 
-      - name: Run frontend tests
-        run: npm run test -- --run
+      - name: Run tests
+      - run: npm run test -- --run
+      - working-directory: ./frontend
