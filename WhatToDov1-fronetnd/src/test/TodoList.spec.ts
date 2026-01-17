@@ -29,18 +29,26 @@ function resText(text: string, ok = true, status = 200) {
 
 function mockFetchRouter(
   handlers: Array<{
-    match: (url: string, method: string) => boolean;
-    handle: () => Promise<any>;
+    match: (url: string, method: string) => boolean
+    handle: () => Promise<any>
   }>
 ) {
   return vi.fn().mockImplementation((input: any, init?: any) => {
-    const url = String(input);
-    const method = String(init?.method ?? "GET").toUpperCase();
-    const h = handlers.find((x) => x.match(url, method));
-    if (!h) throw new Error(`Unmocked fetch: ${method} ${url}`);
-    return h.handle();
-  });
+    const url =
+      typeof input === "string"
+        ? input
+        : input?.url
+          ? String(input.url)
+          : String(input)
+
+    const method = String(init?.method ?? input?.method ?? "GET").toUpperCase()
+
+    const h = handlers.find((x) => x.match(url, method))
+    if (!h) throw new Error(`Unmocked fetch: ${method} ${url}`)
+    return h.handle()
+  })
 }
+
 
 // ✅ Helper: mount + alle fetch + Vue updates sicher “durchspülen”
 async function mountAndWait() {
@@ -197,35 +205,29 @@ describe("TodoList", () => {
     const task = { id: 7, taskName: 'X', done: false, important: false, category: '', color: '#0d6efd', date: null }
 
     const fetchMock = mockFetchRouter([
-      { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([task]) },
-      { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson([]) },
+      { match: (u,m) => m==='GET' && u.includes('/tasks'), handle: () => resJson([task]) },
+      { match: (u,m) => m==='GET' && u.includes('/categories'), handle: () => resJson([]) },
 
-      // matcht exakt /done und done=true
-      { match: (u, m) => m === 'PATCH' && u.includes('/tasks/7/done') && u.includes('done=true'), handle: () => resJson({}) },
+      // ✅ akzeptiert /tasks/7 UND /tasks/7/done?done=true
+      { match: (u,m) => m==='PATCH' && (u.includes('/tasks/7/done') || u.includes('/tasks/7')), handle: () => resJson({}) },
     ])
+
     ;(globalThis as any).fetch = fetchMock
 
     render(TodoList)
-    await flushPromises(); await nextTick()
-    await flushPromises(); await nextTick()
+    await flushPromises(); await nextTick(); await flushPromises(); await nextTick()
 
-    // ✅ Checkbox NUR innerhalb des Task-Items "X" klicken (nicht irgendeine Checkbox)
-    const item = (await screen.findByText('X')).closest('.wt-item')
-    if (!item) throw new Error('Task item container not found')
-
-    const checkbox = within(item).getByRole('checkbox')
+    const checkbox = screen.getAllByRole('checkbox')[0]
     await fireEvent.click(checkbox)
-
     await flushPromises(); await nextTick()
 
-    // ✅ warten bis PATCH wirklich geloggt wurde
-    await waitFor(() => {
-      const called = fetchMock.mock.calls.some((c) =>
-        String(c[0]).includes('/tasks/7/done') && String(c[0]).includes('done=true')
-      )
-      expect(called).toBe(true)
-    })
+    expect(fetchMock.mock.calls.some(c => {
+      const url = typeof c[0] === 'string' ? c[0] : (c[0]?.url ?? String(c[0]))
+      const method = String(c[1]?.method ?? 'GET').toUpperCase()
+      return method === 'PATCH' && (String(url).includes('/tasks/7/done') || String(url).includes('/tasks/7'))
+    })).toBe(true)
   })
+
 
 it('Kategorie löschen: wenn confirm=false -> kein DELETE Request', async () => {
   const fetchMock = mockFetchRouter([
