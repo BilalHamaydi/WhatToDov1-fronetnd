@@ -16,7 +16,7 @@ jobs:
         run: |
           pwd
           ls -la
-          find . -maxdepth 3 -type f -name "settings.gradle" -o -name "build.gradle" -o -name "gradlew" | sed 's|^\./||'
+          find . -maxdepth 6 -type f -name "gradlew" -o -name "settings.gradle" -o -name "build.gradle" | sed 's|^\./||'
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -28,7 +28,13 @@ jobs:
         shell: bash
         run: |
           set -e
-          BACKEND_DIR="$(dirname "$(find . -maxdepth 4 -type f -name gradlew | head -n 1)")"
+          GRADLEW_PATH="$(find . -maxdepth 6 -type f -name gradlew | head -n 1)"
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "❌ gradlew not found. Make sure backend folder is in this repo."
+            exit 1
+          fi
+
+          BACKEND_DIR="$(dirname "$GRADLEW_PATH")"
           echo "Backend dir: $BACKEND_DIR"
           cd "$BACKEND_DIR"
           chmod +x ./gradlew

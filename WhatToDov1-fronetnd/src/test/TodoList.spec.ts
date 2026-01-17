@@ -152,24 +152,30 @@ describe('TodoList', () => {
   it('toggle done sendet PATCH', async () => {
     const task = { id: 7, taskName: 'X', done: false, important: false, category: '', color: '#0d6efd', date: null }
 
-    const r = makeFetchMock()
-      .on('GET', u => u.pathname.endsWith('/tasks'), () => resJson([task]))
-      .on('GET', u => u.pathname.endsWith('/categories'), () => resJson([]))
-      .on('PATCH', u => u.pathname.endsWith('/tasks/7/done') && u.searchParams.has('done'), () => resJson({}))
+    const fetchMock = mockFetchRouter([
+      { match: (u,m) => m==='GET' && u.includes('/tasks'), handle: () => resJson([task]) },
+      { match: (u,m) => m==='GET' && u.includes('/categories'), handle: () => resJson([]) },
 
-    ;(globalThis as any).fetch = r.fetchMock
+      // ✅ DEIN TodoList.vue macht PATCH /tasks/{id} (nicht /done)
+      { match: (u,m) => m==='PATCH' && u.includes('/tasks/7'), handle: () => resJson({}) },
+    ])
+    ;(globalThis as any).fetch = fetchMock
 
-    await mountAndWait()
+    render(TodoList)
+    await flushPromises(); await nextTick(); await flushPromises(); await nextTick()
 
-    expect(await screen.findByText('X')).toBeInTheDocument()
-
-    // Checkbox anklicken
+    await screen.findByText('X')
     await fireEvent.click(screen.getAllByRole('checkbox')[0])
 
-    await waitFor(() => {
-      expect(r.fetchMock.mock.calls.some(c => String(c[0]).includes('/tasks/7/done'))).toBe(true)
-    })
+    await flushPromises(); await nextTick()
+
+    expect(fetchMock.mock.calls.some(c => {
+      const url = String(c[0])
+      const method = String(c[1]?.method ?? 'GET').toUpperCase()
+      return method === 'PATCH' && url.includes('/tasks/7')
+    })).toBe(true)
   })
+
 
   it('Suchleiste filtert Tasks nach Name', async () => {
     const t1 = { id: 1, taskName: 'Uni lernen', done: false, important: false, category: '', color: '#0d6efd', date: null }
