@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, fireEvent, screen, waitFor } from "@testing-library/vue";
+import { render, fireEvent, screen, waitFor, within } from '@testing-library/vue'
 import { nextTick } from "vue";
 
 import TodoList from "../components/TodoList.vue";
