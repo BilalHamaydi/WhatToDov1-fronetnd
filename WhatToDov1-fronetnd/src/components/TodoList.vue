@@ -6,13 +6,15 @@ type ISODate = string // "YYYY-MM-DD"
 
 interface Task {
   id: number
-  taskName: string
+  taskName?: string
+  name?: string
   done: boolean
   important: boolean
   category?: string | null
   color?: string | null
   date?: ISODate | null
 }
+
 
 const COLOR_OPTIONS = [
   { label: 'Grau', value: '#6c757d' },
@@ -77,6 +79,13 @@ function toISO(d: Date): ISODate {
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
 }
+function normalizeTask(t: Task): Task {
+  return {
+    ...t,
+    taskName: t.taskName ?? t.name ?? '',
+  }
+}
+
 function fromISO(s: string): Date {
   const [y, m, d] = s.split('-').map(Number)
   return new Date(y, (m ?? 1) - 1, d ?? 1)
@@ -106,13 +115,15 @@ async function loadTasks() {
   loading.value = true
   error.value = ''
   try {
-    tasks.value = await apiGetJson<Task[]>(`${API_BASE}/tasks`)
+    const raw = await apiGetJson<Task[]>(`${API_BASE}/tasks`)
+    tasks.value = raw.map(normalizeTask)
   } catch (e: any) {
     error.value = e?.message ?? 'Failed to fetch tasks'
   } finally {
     loading.value = false
   }
 }
+
 
 async function loadCategories() {
   try {
@@ -177,13 +188,15 @@ async function addTask() {
   error.value = ''
   try {
     const body = {
-      taskName: name,
+      name,              // ✅ für Tests/Backend die "name" erwarten
+      taskName: name,    // ✅ für dein UI
       important: false,
       done: false,
       category: newTaskCategory.value || '',
       color: newTaskColor.value,
       date: newTaskDate.value || null,
     }
+
 
     const res = await fetch(`${API_BASE}/tasks`, {
       method: 'POST',
@@ -196,8 +209,9 @@ async function addTask() {
       throw new Error(`Create task failed (HTTP ${res.status})${text ? ` – ${text}` : ''}`)
     }
 
-    const created: Task = await res.json()
+    const created: Task = normalizeTask(await res.json())
     tasks.value.unshift(created)
+
 
     newTaskName.value = ''
     newTaskDate.value = ''
@@ -220,13 +234,18 @@ async function deleteTask(id: number) {
 async function toggleDone(task: Task) {
   error.value = ''
   try {
-    const res = await fetch(`${API_BASE}/tasks/${task.id}/done?done=${task.done}`, { method: 'PATCH' })
+    const res = await fetch(`${API_BASE}/tasks/${task.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ done: task.done }),
+    })
     if (!res.ok) throw new Error(`Update failed (HTTP ${res.status})`)
   } catch (e: any) {
     task.done = !task.done
     error.value = e?.message ?? 'Update failed'
   }
 }
+
 
 async function refreshAll() {
   await Promise.all([loadTasks(), loadCategories()])
@@ -417,7 +436,8 @@ onMounted(async () => {
 
               <div class="wt-item-main">
                 <div class="wt-item-name" :class="{ done: t.done }">
-                  {{ t.taskName }}
+                  {{ t.taskName || t.name }}
+
                 </div>
 
                 <div class="wt-item-badges">
