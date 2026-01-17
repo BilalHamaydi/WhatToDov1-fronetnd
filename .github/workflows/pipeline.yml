@@ -10,11 +10,13 @@ jobs:
     name: Backend Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Show repo structure (debug)
-        run: ls -la
+      - name: Debug repo tree
+        run: |
+          pwd
+          ls -la
+          find . -maxdepth 3 -type f -name "settings.gradle" -o -name "build.gradle" -o -name "gradlew" | sed 's|^\./||'
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -22,29 +24,39 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - name: Run backend tests
-        run: ./gradlew test
-        working-directory: WhatToDov1
+      - name: Run backend tests (auto-detect)
+        shell: bash
+        run: |
+          set -e
+          BACKEND_DIR="$(dirname "$(find . -maxdepth 4 -type f -name gradlew | head -n 1)")"
+          echo "Backend dir: $BACKEND_DIR"
+          cd "$BACKEND_DIR"
+          chmod +x ./gradlew
+          ./gradlew test
 
   frontend:
     name: Frontend Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Show repo structure (debug)
-        run: ls -la
+      - name: Debug repo tree
+        run: |
+          pwd
+          ls -la
+          find . -maxdepth 4 -type f -name "package.json" -o -name "vite.config.*" | sed 's|^\./||'
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: WhatToDov1-fronetnd
-
-      - name: Run frontend tests
-        run: npm run test:run
-        working-directory: WhatToDov1-fronetnd
+      - name: Install + Run frontend tests (auto-detect)
+        shell: bash
+        run: |
+          set -e
+          FRONTEND_DIR="$(dirname "$(find . -maxdepth 6 -type f -name package.json -exec grep -l '"vitest"' {} \; | head -n 1)")"
+          echo "Frontend dir: $FRONTEND_DIR"
+          cd "$FRONTEND_DIR"
+          npm ci
+          npx vitest run
