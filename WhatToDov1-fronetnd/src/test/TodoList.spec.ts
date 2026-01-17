@@ -192,4 +192,82 @@ describe("TodoList", () => {
 
     expect(await screen.findByText(/HTTP 500/i)).toBeInTheDocument();
   });
+
+  it('toggle done sendet PATCH mit done=true', async () => {
+    const task = { id: 7, taskName: 'X', done: false, important: false, category: '', color: '#0d6efd', date: null }
+
+    const fetchMock = mockFetchRouter([
+      { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([task]) },
+      { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson([]) },
+
+      // matcht exakt /done und done=true
+      { match: (u, m) => m === 'PATCH' && u.includes('/tasks/7/done') && u.includes('done=true'), handle: () => resJson({}) },
+    ])
+    ;(globalThis as any).fetch = fetchMock
+
+    render(TodoList)
+    await flushPromises(); await nextTick()
+    await flushPromises(); await nextTick()
+
+    // ✅ Checkbox NUR innerhalb des Task-Items "X" klicken (nicht irgendeine Checkbox)
+    const item = (await screen.findByText('X')).closest('.wt-item')
+    if (!item) throw new Error('Task item container not found')
+
+    const checkbox = within(item).getByRole('checkbox')
+    await fireEvent.click(checkbox)
+
+    await flushPromises(); await nextTick()
+
+    // ✅ warten bis PATCH wirklich geloggt wurde
+    await waitFor(() => {
+      const called = fetchMock.mock.calls.some((c) =>
+        String(c[0]).includes('/tasks/7/done') && String(c[0]).includes('done=true')
+      )
+      expect(called).toBe(true)
+    })
+  })
+
+it('Kategorie löschen: wenn confirm=false -> kein DELETE Request', async () => {
+  const fetchMock = mockFetchRouter([
+    { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([]) },
+    { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson(['Uni']) },
+
+    // falls doch DELETE passiert, würde Router diesen Match nehmen
+    { match: (u, m) => m === 'DELETE' && u.includes('/categories/Uni'), handle: () => resJson({}, true, 204) },
+  ])
+  ;(globalThis as any).fetch = fetchMock
+
+  vi.spyOn(window, 'confirm').mockReturnValue(false)
+
+  render(TodoList)
+  await flushPromises(); await nextTick()
+  await flushPromises(); await nextTick()
+
+  // ✅ warten bis Option wirklich im DOM ist
+  await screen.findByRole('option', { name: 'Uni' })
+
+  // ✅ Kategorie-Select gezielt im "Kategorie"-Block holen
+  const categoryField = screen.getByText('Kategorie').closest('.wt-field')
+  if (!categoryField) throw new Error('Kategorie field not found')
+
+  const categorySelect = within(categoryField).getByRole('combobox')
+  await fireEvent.update(categorySelect, 'Uni')
+  await nextTick()
+
+  const delBtn = within(categoryField).getByTitle('Kategorie löschen')
+  await fireEvent.click(delBtn)
+
+  await flushPromises(); await nextTick()
+
+  // ✅ es darf KEIN DELETE call vorkommen
+  const anyDelete = fetchMock.mock.calls.some((c) => {
+    const url = String(c[0])
+    const method = String((c[1] as any)?.method ?? 'GET').toUpperCase()
+    return method === 'DELETE' && url.includes('/categories/Uni')
+  })
+  expect(anyDelete).toBe(false)
+})
+
+
 });
+
