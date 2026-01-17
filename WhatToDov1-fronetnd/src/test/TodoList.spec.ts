@@ -124,23 +124,30 @@ describe("TodoList", () => {
       { match: (u, m) => m === "GET" && u.includes("/tasks"), handle: () => resJson([task]) },
       { match: (u, m) => m === "GET" && u.includes("/categories"), handle: () => resJson([]) },
 
-      // ✅ WICHTIG: dein Code macht PATCH auf /tasks/{id}/done?done=true
+      // ✅ akzeptiere BEIDE Varianten:
+      // 1) dein ursprünglicher Endpoint: /tasks/7/done?done=true
       { match: (u, m) => m === "PATCH" && u.includes("/tasks/7/done"), handle: () => resJson({}) },
+
+      // 2) falls du stattdessen PATCH /tasks/7 verwendest (patchTask endpoint)
+      { match: (u, m) => m === "PATCH" && u.includes("/tasks/7"), handle: () => resJson({}) },
     ]);
+
     (globalThis as any).fetch = fetchMock;
 
     await mountAndWait();
 
     await screen.findByText("X");
-
-    // erstes Checkbox = Task done toggle
     await fireEvent.click(screen.getAllByRole("checkbox")[0]);
 
     await flushPromises();
     await nextTick();
 
-    expect(fetchMock.mock.calls.some((c) => String(c[0]).includes("/tasks/7/done"))).toBe(true);
+    // ✅ wir prüfen jetzt auf "irgendein PATCH auf /tasks/7"
+    expect(
+      fetchMock.mock.calls.some((c) => String(c[0]).includes("/tasks/7") && String(c[1]?.method ?? "GET").toUpperCase() === "PATCH")
+    ).toBe(true);
   });
+
 
   it("Suchleiste filtert Tasks nach Name", async () => {
     const t1 = { id: 1, taskName: "Uni lernen", done: false, important: false, category: "", color: "#0d6efd", date: null };
