@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: Frontend CI
 
 on:
   push:
@@ -6,63 +6,27 @@ on:
   pull_request:
 
 jobs:
-  backend:
-    name: Backend Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Debug repo tree
-        run: |
-          pwd
-          ls -la
-          find . -maxdepth 6 -type f -name "gradlew" -o -name "settings.gradle" -o -name "build.gradle" | sed 's|^\./||'
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "21"
-
-      - name: Run backend tests (auto-detect)
-        shell: bash
-        run: |
-          set -e
-          GRADLEW_PATH="$(find . -maxdepth 6 -type f -name gradlew | head -n 1)"
-          if [ -z "$GRADLEW_PATH" ]; then
-            echo "❌ gradlew not found. Make sure backend folder is in this repo."
-            exit 1
-          fi
-
-          BACKEND_DIR="$(dirname "$GRADLEW_PATH")"
-          echo "Backend dir: $BACKEND_DIR"
-          cd "$BACKEND_DIR"
-          chmod +x ./gradlew
-          ./gradlew test
-
   frontend:
-    name: Frontend Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./WhatToDov1-fronetnd
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Debug repo tree
-        run: |
-          pwd
-          ls -la
-          find . -maxdepth 4 -type f -name "package.json" -o -name "vite.config.*" | sed 's|^\./||'
-
-      - name: Setup Node
+      - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: WhatToDov1-fronetnd/package-lock.json
 
-      - name: Install + Run frontend tests (auto-detect)
-        shell: bash
-        run: |
-          set -e
-          FRONTEND_DIR="$(dirname "$(find . -maxdepth 6 -type f -name package.json -exec grep -l '"vitest"' {} \; | head -n 1)")"
-          echo "Frontend dir: $FRONTEND_DIR"
-          cd "$FRONTEND_DIR"
-          npm ci
-          npx vitest run
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm run test:run
+
+      - name: Build
+        run: npm run build

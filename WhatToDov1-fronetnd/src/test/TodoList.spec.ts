@@ -152,13 +152,29 @@ describe('TodoList', () => {
   it('toggle done sendet PATCH', async () => {
     const task = { id: 7, taskName: 'X', done: false, important: false, category: '', color: '#0d6efd', date: null }
 
-    const fetchMock = mockFetchRouter([
-      { match: (u,m) => m==='GET' && u.includes('/tasks'), handle: () => resJson([task]) },
-      { match: (u,m) => m==='GET' && u.includes('/categories'), handle: () => resJson([]) },
+    const fetchMock = vi.fn()
+      // initial load: GET /tasks
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => [task],
+        text: async () => JSON.stringify([task]),
+      } as any)
+      // initial load: GET /categories
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => [],
+        text: async () => '[]',
+      } as any)
+      // toggle: PATCH /tasks/7   (dein UI macht PATCH /tasks/{id})
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({}),
+        text: async () => '{}',
+      } as any)
 
-      // ✅ DEIN TodoList.vue macht PATCH /tasks/{id} (nicht /done)
-      { match: (u,m) => m==='PATCH' && u.includes('/tasks/7'), handle: () => resJson({}) },
-    ])
     ;(globalThis as any).fetch = fetchMock
 
     render(TodoList)
@@ -169,12 +185,16 @@ describe('TodoList', () => {
 
     await flushPromises(); await nextTick()
 
-    expect(fetchMock.mock.calls.some(c => {
-      const url = String(c[0])
-      const method = String(c[1]?.method ?? 'GET').toUpperCase()
-      return method === 'PATCH' && url.includes('/tasks/7')
-    })).toBe(true)
+    // ✅ prüfe dass ein PATCH Call auf /tasks/7 rausging
+    expect(
+      fetchMock.mock.calls.some((c: any[]) => {
+        const url = String(c[0])
+        const method = String(c[1]?.method ?? 'GET').toUpperCase()
+        return method === 'PATCH' && url.includes('/tasks/7')
+      })
+    ).toBe(true)
   })
+
 
 
   it('Suchleiste filtert Tasks nach Name', async () => {
