@@ -2,6 +2,7 @@
 import { RouterView } from 'vue-router'
 import { onMounted } from 'vue'
 
+
 function applyTheme(theme: 'light' | 'dark') {
   const root = document.documentElement
 

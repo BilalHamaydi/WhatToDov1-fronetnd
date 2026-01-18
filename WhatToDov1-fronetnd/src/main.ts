@@ -1,4 +1,6 @@
 import './assets/main.css'
+import './assets/todolist.css'
+
 
 import { createApp } from 'vue'
 import App from './App.vue'
