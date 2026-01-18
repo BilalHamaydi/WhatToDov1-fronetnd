@@ -87,7 +87,7 @@ const tasksForLeftPanel = computed(() => {
   const base = selectedDate.value ? selectedDayTasks.value : tasks.value
   const q = searchQuery.value.trim().toLowerCase()
   if (!q) return base
-  return base.filter(t => (t.taskName ?? '').toLowerCase().includes(q))
+  return base.filter((t) => (t.taskName ?? '').toLowerCase().includes(q))
 })
 
 // ---------- API actions ----------
@@ -142,7 +142,7 @@ async function deleteCategory(name: string) {
   error.value = ''
   try {
     await apiDeleteCategory(cleaned)
-    categories.value = categories.value.filter(c => c !== cleaned)
+    categories.value = categories.value.filter((c) => c !== cleaned)
     if (newTaskCategory.value === cleaned) newTaskCategory.value = ''
   } catch (e: any) {
     error.value = e?.message ?? 'Delete category failed'
@@ -176,7 +176,7 @@ async function deleteTask(id: number) {
   error.value = ''
   try {
     await apiDeleteTask(id)
-    tasks.value = tasks.value.filter(t => t.id !== id)
+    tasks.value = tasks.value.filter((t) => t.id !== id)
   } catch (e: any) {
     error.value = e?.message ?? 'Delete failed'
   }
@@ -197,7 +197,6 @@ onMounted(async () => {
   await refreshAll()
 })
 </script>
-
 
 <template>
   <div class="wt-wrap">
@@ -238,16 +237,11 @@ onMounted(async () => {
             />
           </div>
 
-                 <!-- ✅ NUR: Suche -->
-                 <div class="wt-search-card">
-                   <div class="wt-search-title">🔍 Suche</div>
-                   <input
-                     v-model="searchQuery"
-                     class="wt-input"
-                     placeholder="Taskname eingeben…"
-                   />
-                 </div>
-
+          <!-- ✅ NUR: Suche -->
+          <div class="wt-search-card">
+            <div class="wt-search-title">🔍 Suche</div>
+            <input v-model="searchQuery" class="wt-input" placeholder="Taskname eingeben…" />
+          </div>
 
           <div class="wt-field wt-w260">
             <label class="wt-label">Kategorie</label>
@@ -311,16 +305,21 @@ onMounted(async () => {
               <div class="wt-item-main">
                 <div class="wt-item-name" :class="{ done: t.done }">
                   {{ t.taskName }}
-
                 </div>
 
                 <div class="wt-item-badges">
                   <span v-if="t.category" class="wt-pill wt-pill-cat">{{ t.category }}</span>
-                  <span v-if="t.date" class="wt-pill wt-pill-date">📅 {{ formatBadgeDate(t.date) }}</span>
+                  <span v-if="t.date" class="wt-pill wt-pill-date"
+                    >📅 {{ formatBadgeDate(t.date) }}</span
+                  >
                 </div>
               </div>
 
-              <button class="wt-btn wt-btn-danger wt-btn-icon" title="Task löschen" @click="deleteTask(t.id)">
+              <button
+                class="wt-btn wt-btn-danger wt-btn-icon"
+                title="Task löschen"
+                @click="deleteTask(t.id)"
+              >
                 🗑️
               </button>
             </div>
@@ -333,93 +332,114 @@ onMounted(async () => {
       </div>
 
       <!-- RIGHT -->
-            <!-- RIGHT -->
-                  <!-- RIGHT -->
-                  <div class="wt-card">
-                    <!-- Überschrift NUR -->
-                    <div class="wt-card-head">
-                      <div class="wt-title">
-                        <span class="wt-icon">🗓️</span>
-                        <span>Kalender</span>
-                      </div>
-                    </div>
+      <!-- RIGHT -->
+      <!-- RIGHT -->
+      <div class="wt-card">
+        <!-- Überschrift NUR -->
+        <div class="wt-card-head">
+          <div class="wt-title">
+            <span class="wt-icon">🗓️</span>
+            <span>Kalender</span>
+          </div>
+        </div>
 
-                    <!-- ✅ Navigation UNTER der Überschrift -->
-                    <div class="wt-cal-nav wt-cal-nav-below">
-                      <button class="wt-btn wt-btn-ghost wt-btn-icon" @click="prevMonth" aria-label="Vorheriger Monat">‹</button>
+        <!-- ✅ Navigation UNTER der Überschrift -->
+        <div class="wt-cal-nav wt-cal-nav-below">
+          <button
+            class="wt-btn wt-btn-ghost wt-btn-icon"
+            @click="prevMonth"
+            aria-label="Vorheriger Monat"
+          >
+            ‹
+          </button>
 
-                      <div class="wt-cal-pickers">
-                        <select v-model="selectedMonthIndex" class="wt-select wt-select-cal" aria-label="Monat wählen">
-                          <option v-for="(m, idx) in MONTHS_DE" :key="m" :value="idx">{{ m }}</option>
-                        </select>
+          <div class="wt-cal-pickers">
+            <select
+              v-model="selectedMonthIndex"
+              class="wt-select wt-select-cal"
+              aria-label="Monat wählen"
+            >
+              <option v-for="(m, idx) in MONTHS_DE" :key="m" :value="idx">{{ m }}</option>
+            </select>
 
-                        <select v-model="selectedYear" class="wt-select wt-select-cal wt-select-year" aria-label="Jahr wählen">
-                          <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
-                        </select>
-                      </div>
+            <select
+              v-model="selectedYear"
+              class="wt-select wt-select-cal wt-select-year"
+              aria-label="Jahr wählen"
+            >
+              <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
+            </select>
+          </div>
 
-                      <button class="wt-btn wt-btn-ghost wt-btn-icon" @click="nextMonth" aria-label="Nächster Monat">›</button>
-                    </div>
+          <button
+            class="wt-btn wt-btn-ghost wt-btn-icon"
+            @click="nextMonth"
+            aria-label="Nächster Monat"
+          >
+            ›
+          </button>
+        </div>
 
-                    <div class="wt-cal-week">
-                      <div>Mo</div><div>Di</div><div>Mi</div><div>Do</div><div>Fr</div><div>Sa</div><div>So</div>
-                    </div>
+        <div class="wt-cal-week">
+          <div>Mo</div>
+          <div>Di</div>
+          <div>Mi</div>
+          <div>Do</div>
+          <div>Fr</div>
+          <div>Sa</div>
+          <div>So</div>
+        </div>
 
-                    <div class="wt-cal-grid">
-                      <button
-                        v-for="d in calendarDays"
-                        :key="d.iso"
-                        class="wt-cal-day"
-                        :class="{ muted: !d.inMonth, selected: selectedDate === d.iso }"
-                        @click="selectDay(d.iso)"
-                        type="button"
-                      >
-                        <div class="wt-cal-top">
-                          <div class="wt-cal-num">{{ d.date.getDate() }}</div>
+        <div class="wt-cal-grid">
+          <button
+            v-for="d in calendarDays"
+            :key="d.iso"
+            class="wt-cal-day"
+            :class="{ muted: !d.inMonth, selected: selectedDate === d.iso }"
+            @click="selectDay(d.iso)"
+            type="button"
+          >
+            <div class="wt-cal-top">
+              <div class="wt-cal-num">{{ d.date.getDate() }}</div>
 
-                          <div class="wt-cal-dots" v-if="(tasksByDate.get(d.iso) ?? []).length">
-                            <span
-                              v-for="tt in (tasksByDate.get(d.iso) ?? []).slice(0, 4)"
-                              :key="tt.id"
-                              class="dot"
-                              :style="{ background: tt.color || '#2b2f36' }"
-                              :title="tt.taskName"
-                            ></span>
+              <div class="wt-cal-dots" v-if="(tasksByDate.get(d.iso) ?? []).length">
+                <span
+                  v-for="tt in (tasksByDate.get(d.iso) ?? []).slice(0, 4)"
+                  :key="tt.id"
+                  class="dot"
+                  :style="{ background: tt.color || '#2b2f36' }"
+                  :title="tt.taskName"
+                ></span>
 
-                            <span v-if="(tasksByDate.get(d.iso) ?? []).length > 4" class="wt-cal-more">
-                              +{{ (tasksByDate.get(d.iso) ?? []).length - 4 }}
-                            </span>
-                          </div>
-                        </div>
-                      </button>
-                    </div>
+                <span v-if="(tasksByDate.get(d.iso) ?? []).length > 4" class="wt-cal-more">
+                  +{{ (tasksByDate.get(d.iso) ?? []).length - 4 }}
+                </span>
+              </div>
+            </div>
+          </button>
+        </div>
 
-                    <div class="wt-divider"></div>
+        <div class="wt-divider"></div>
 
-                    <div class="wt-selected">
-                      <div class="wt-selected-title">
-                        <span v-if="selectedDate">📅 {{ formatBadgeDate(selectedDate) }}</span>
-                        <span v-else>Wähle ein Datum</span>
-                      </div>
+        <div class="wt-selected">
+          <div class="wt-selected-title">
+            <span v-if="selectedDate">📅 {{ formatBadgeDate(selectedDate) }}</span>
+            <span v-else>Wähle ein Datum</span>
+          </div>
 
-                      <div v-if="selectedDate && selectedDayTasks.length" class="wt-selected-list">
-                        <div v-for="tt in selectedDayTasks" :key="tt.id" class="wt-selected-item">
-                          <span class="dot" :style="{ background: tt.color || '#2b2f36' }"></span>
-                          <span :class="{ done: tt.done }">{{ tt.taskName }}</span>
-                          <span v-if="tt.category" class="wt-pill wt-pill-cat small">{{ tt.category }}</span>
-                        </div>
-                      </div>
+          <div v-if="selectedDate && selectedDayTasks.length" class="wt-selected-list">
+            <div v-for="tt in selectedDayTasks" :key="tt.id" class="wt-selected-item">
+              <span class="dot" :style="{ background: tt.color || '#2b2f36' }"></span>
+              <span :class="{ done: tt.done }">{{ tt.taskName }}</span>
+              <span v-if="tt.category" class="wt-pill wt-pill-cat small">{{ tt.category }}</span>
+            </div>
+          </div>
 
-                      <div v-else-if="selectedDate" class="wt-empty">
-                        Keine Tasks für diesen Tag.
-                      </div>
-                    </div>
+          <div v-else-if="selectedDate" class="wt-empty">Keine Tasks für diesen Tag.</div>
+        </div>
 
-                    <button class="wt-btn wt-btn-wide" @click="refreshAll">
-                      Kalender aktualisieren
-                    </button>
-                  </div>
-</div>
-</div>
+        <button class="wt-btn wt-btn-wide" @click="refreshAll">Kalender aktualisieren</button>
+      </div>
+    </div>
+  </div>
 </template>
-

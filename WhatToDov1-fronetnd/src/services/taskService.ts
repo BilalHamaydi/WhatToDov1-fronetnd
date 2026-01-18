@@ -1,6 +1,10 @@
 import { API_BASE } from '../api'
-import { normalizeTask, Task } from '../types/tasks'
+import { normalizeTask } from '../types/tasks'
+import type { Task } from '../types/tasks'
 import { getJson, sendJson } from './http'
+
+
+
 
 export async function fetchTasks(): Promise<Task[]> {
   const raw = await getJson<any[]>(`${API_BASE}/tasks`)

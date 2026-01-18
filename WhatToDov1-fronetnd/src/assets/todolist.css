@@ -1,4 +1,4 @@
-<style scoped>
+
 .wt-wrap { width: 100%; padding: 18px 16px 28px; }
 
 /* Mehr Platz links + harte Min-Breite damit nix überlappt */
@@ -243,4 +243,3 @@
 .wt-selected-item { display:flex; align-items:center; gap:10px; color: rgba(255,255,255,0.9); }
 .wt-selected-item .dot { width: 10px; height: 10px; border-radius: 999px; }
 .wt-selected-item .done { text-decoration: line-through; opacity: 0.6; }
-</style>

@@ -4,11 +4,7 @@ export async function getJson<T>(url: string): Promise<T> {
   return (await res.json()) as T
 }
 
-export async function sendJson<T>(
-  url: string,
-  method: string,
-  body?: unknown
-): Promise<T> {
+export async function sendJson<T>(url: string, method: string, body?: unknown): Promise<T> {
   const res = await fetch(url, {
     method,
     headers: { 'Content-Type': 'application/json' },

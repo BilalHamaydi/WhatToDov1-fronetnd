@@ -2,7 +2,6 @@
 import { RouterView } from 'vue-router'
 import { onMounted } from 'vue'
 
-
 function applyTheme(theme: 'light' | 'dark') {
   const root = document.documentElement
 
@@ -110,12 +109,11 @@ onMounted(() => {
 ────────────────────────────────────────────── */
 .center-content {
   width: 100%;
-  max-width: 1200px;   /* vorher 700px -> jetzt deutlich größer */
+  max-width: 1200px; /* vorher 700px -> jetzt deutlich größer */
   margin: 0 auto;
   text-align: center;
   padding: 2rem 1.5rem;
 }
-
 
 .title {
   font-size: 3rem;
@@ -123,8 +121,8 @@ onMounted(() => {
   letter-spacing: -0.5px;
   margin-top: 2rem;
   margin-bottom: 0.5rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display',
-    'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
   animation: fadeIn 0.6s ease forwards;
   opacity: 0;
 }
@@ -135,8 +133,8 @@ onMounted(() => {
   color: var(--color-text, currentColor);
   opacity: 0.75;
   margin-bottom: 2.5rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text',
-    'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
   animation: fadeIn 0.9s ease forwards;
   opacity: 0;
 }

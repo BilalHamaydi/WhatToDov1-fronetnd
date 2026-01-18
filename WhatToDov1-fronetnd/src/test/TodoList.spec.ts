@@ -1,11 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, fireEvent, screen, waitFor, within } from '@testing-library/vue'
-import { nextTick } from "vue";
+import { nextTick } from 'vue'
 
-import TodoList from "../components/TodoList.vue";
+import TodoList from '../components/TodoList.vue'
 
 // ✅ immer verfügbar (global in dieser Datei)
-const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
 
 function resJson(data: any, ok = true, status = 200) {
   return Promise.resolve({
@@ -13,8 +13,8 @@ function resJson(data: any, ok = true, status = 200) {
     status,
     json: async () => data,
     text: async () => JSON.stringify(data),
-    headers: { "Content-Type": "application/json" },
-  } as any);
+    headers: { 'Content-Type': 'application/json' },
+  } as any)
 }
 
 function resText(text: string, ok = true, status = 200) {
@@ -23,25 +23,20 @@ function resText(text: string, ok = true, status = 200) {
     status,
     json: async () => ({}),
     text: async () => text,
-    headers: { "Content-Type": "text/plain" },
-  } as any);
+    headers: { 'Content-Type': 'text/plain' },
+  } as any)
 }
 
 function mockFetchRouter(
   handlers: Array<{
     match: (url: string, method: string) => boolean
     handle: () => Promise<any>
-  }>
+  }>,
 ) {
   return vi.fn().mockImplementation((input: any, init?: any) => {
-    const url =
-      typeof input === "string"
-        ? input
-        : input?.url
-          ? String(input.url)
-          : String(input)
+    const url = typeof input === 'string' ? input : input?.url ? String(input.url) : String(input)
 
-    const method = String(init?.method ?? input?.method ?? "GET").toUpperCase()
+    const method = String(init?.method ?? input?.method ?? 'GET').toUpperCase()
 
     const h = handlers.find((x) => x.match(url, method))
     if (!h) throw new Error(`Unmocked fetch: ${method} ${url}`)
@@ -49,227 +44,305 @@ function mockFetchRouter(
   })
 }
 
-
 // ✅ Helper: mount + alle fetch + Vue updates sicher “durchspülen”
 async function mountAndWait() {
-  render(TodoList);
-  await flushPromises();
-  await nextTick();
-  await flushPromises();
-  await nextTick();
+  render(TodoList)
+  await flushPromises()
+  await nextTick()
+  await flushPromises()
+  await nextTick()
 }
 
-describe("TodoList", () => {
-  beforeEach(() => vi.restoreAllMocks());
+describe('TodoList', () => {
+  beforeEach(() => vi.restoreAllMocks())
 
-  it("lädt Tasks + Kategorien beim Start", async () => {
+  it('lädt Tasks + Kategorien beim Start', async () => {
     const fetchMock = mockFetchRouter([
-      { match: (u, m) => m === "GET" && u.includes("/tasks"), handle: () => resJson([]) },
-      { match: (u, m) => m === "GET" && u.includes("/categories"), handle: () => resJson(["Uni"]) },
-    ]);
-    (globalThis as any).fetch = fetchMock;
+      { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([]) },
+      { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson(['Uni']) },
+    ])
+    ;(globalThis as any).fetch = fetchMock
 
-    await mountAndWait();
+    await mountAndWait()
 
-    expect(screen.getByText("ToDo-Liste")).toBeInTheDocument();
-    expect(fetchMock.mock.calls.some((c) => String(c[0]).includes("/tasks"))).toBe(true);
-    expect(fetchMock.mock.calls.some((c) => String(c[0]).includes("/categories"))).toBe(true);
-  });
+    expect(screen.getByText('ToDo-Liste')).toBeInTheDocument()
+    expect(fetchMock.mock.calls.some((c) => String(c[0]).includes('/tasks'))).toBe(true)
+    expect(fetchMock.mock.calls.some((c) => String(c[0]).includes('/categories'))).toBe(true)
+  })
 
-  it("zeigt Kategorie im Dropdown", async () => {
-    (globalThis as any).fetch = mockFetchRouter([
-      { match: (u, m) => m === "GET" && u.includes("/tasks"), handle: () => resJson([]) },
-      { match: (u, m) => m === "GET" && u.includes("/categories"), handle: () => resJson(["Uni"]) },
-    ]);
+  it('zeigt Kategorie im Dropdown', async () => {
+    ;(globalThis as any).fetch = mockFetchRouter([
+      { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([]) },
+      { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson(['Uni']) },
+    ])
 
-    await mountAndWait();
+    await mountAndWait()
 
-    expect(await screen.findByRole("option", { name: "Uni" })).toBeInTheDocument();
-  });
+    expect(await screen.findByRole('option', { name: 'Uni' })).toBeInTheDocument()
+  })
 
-  it("erstellt eine Task (POST) und zeigt sie links an", async () => {
-    const created = { id: 1, taskName: "Neu", done: false, important: false, category: "", color: "#0d6efd", date: null };
+  it('erstellt eine Task (POST) und zeigt sie links an', async () => {
+    const created = {
+      id: 1,
+      taskName: 'Neu',
+      done: false,
+      important: false,
+      category: '',
+      color: '#0d6efd',
+      date: null,
+    }
 
-    (globalThis as any).fetch = mockFetchRouter([
-      { match: (u, m) => m === "GET" && u.includes("/tasks"), handle: () => resJson([]) },
-      { match: (u, m) => m === "GET" && u.includes("/categories"), handle: () => resJson([]) },
-      { match: (u, m) => m === "POST" && u.includes("/tasks"), handle: () => resJson(created) },
-    ]);
+    ;(globalThis as any).fetch = mockFetchRouter([
+      { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([]) },
+      { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson([]) },
+      { match: (u, m) => m === 'POST' && u.includes('/tasks'), handle: () => resJson(created) },
+    ])
 
-    await mountAndWait();
+    await mountAndWait()
 
-    const input = await screen.findByPlaceholderText("Neue Aufgabe…");
-    await fireEvent.update(input, "Neu");
-    await fireEvent.click(screen.getByTitle("Task hinzufügen"));
+    const input = await screen.findByPlaceholderText('Neue Aufgabe…')
+    await fireEvent.update(input, 'Neu')
+    await fireEvent.click(screen.getByTitle('Task hinzufügen'))
 
-    await flushPromises();
-    await nextTick();
+    await flushPromises()
+    await nextTick()
 
-    expect(await screen.findByText("Neu")).toBeInTheDocument();
-  });
+    expect(await screen.findByText('Neu')).toBeInTheDocument()
+  })
 
-  it("löscht eine Task (DELETE) und entfernt sie aus der Liste", async () => {
-    const task = { id: 5, taskName: "DeleteMe", done: false, important: false, category: "", color: "#0d6efd", date: null };
+  it('löscht eine Task (DELETE) und entfernt sie aus der Liste', async () => {
+    const task = {
+      id: 5,
+      taskName: 'DeleteMe',
+      done: false,
+      important: false,
+      category: '',
+      color: '#0d6efd',
+      date: null,
+    }
 
-    (globalThis as any).fetch = mockFetchRouter([
-      { match: (u, m) => m === "GET" && u.includes("/tasks"), handle: () => resJson([task]) },
-      { match: (u, m) => m === "GET" && u.includes("/categories"), handle: () => resJson([]) },
-      { match: (u, m) => m === "DELETE" && u.includes("/tasks/5"), handle: () => resText("", true, 204) },
-    ]);
+    ;(globalThis as any).fetch = mockFetchRouter([
+      { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([task]) },
+      { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson([]) },
+      {
+        match: (u, m) => m === 'DELETE' && u.includes('/tasks/5'),
+        handle: () => resText('', true, 204),
+      },
+    ])
 
-    await mountAndWait();
+    await mountAndWait()
 
-    expect(await screen.findByText("DeleteMe")).toBeInTheDocument();
-    await fireEvent.click(screen.getByTitle("Task löschen"));
+    expect(await screen.findByText('DeleteMe')).toBeInTheDocument()
+    await fireEvent.click(screen.getByTitle('Task löschen'))
 
-    await waitFor(() => expect(screen.queryByText("DeleteMe")).not.toBeInTheDocument());
-  });
+    await waitFor(() => expect(screen.queryByText('DeleteMe')).not.toBeInTheDocument())
+  })
 
-  it("toggle done sendet PATCH", async () => {
-    const task = { id: 7, taskName: "X", done: false, important: false, category: "", color: "#0d6efd", date: null };
+  it('toggle done sendet PATCH', async () => {
+    const task = {
+      id: 7,
+      taskName: 'X',
+      done: false,
+      important: false,
+      category: '',
+      color: '#0d6efd',
+      date: null,
+    }
 
     const fetchMock = mockFetchRouter([
-      { match: (u, m) => m === "GET" && u.includes("/tasks"), handle: () => resJson([task]) },
-      { match: (u, m) => m === "GET" && u.includes("/categories"), handle: () => resJson([]) },
+      { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([task]) },
+      { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson([]) },
 
       // ✅ akzeptiere BEIDE Varianten:
       // 1) dein ursprünglicher Endpoint: /tasks/7/done?done=true
-      { match: (u, m) => m === "PATCH" && u.includes("/tasks/7/done"), handle: () => resJson({}) },
+      { match: (u, m) => m === 'PATCH' && u.includes('/tasks/7/done'), handle: () => resJson({}) },
 
       // 2) falls du stattdessen PATCH /tasks/7 verwendest (patchTask endpoint)
-      { match: (u, m) => m === "PATCH" && u.includes("/tasks/7"), handle: () => resJson({}) },
-    ]);
+      { match: (u, m) => m === 'PATCH' && u.includes('/tasks/7'), handle: () => resJson({}) },
+    ])
 
-    (globalThis as any).fetch = fetchMock;
+    ;(globalThis as any).fetch = fetchMock
 
-    await mountAndWait();
+    await mountAndWait()
 
-    await screen.findByText("X");
-    await fireEvent.click(screen.getAllByRole("checkbox")[0]);
+    await screen.findByText('X')
+    await fireEvent.click(screen.getAllByRole('checkbox')[0])
 
-    await flushPromises();
-    await nextTick();
+    await flushPromises()
+    await nextTick()
 
     // ✅ wir prüfen jetzt auf "irgendein PATCH auf /tasks/7"
     expect(
-      fetchMock.mock.calls.some((c) => String(c[0]).includes("/tasks/7") && String(c[1]?.method ?? "GET").toUpperCase() === "PATCH")
-    ).toBe(true);
-  });
+      fetchMock.mock.calls.some(
+        (c) =>
+          String(c[0]).includes('/tasks/7') &&
+          String(c[1]?.method ?? 'GET').toUpperCase() === 'PATCH',
+      ),
+    ).toBe(true)
+  })
 
+  it('Suchleiste filtert Tasks nach Name', async () => {
+    const t1 = {
+      id: 1,
+      taskName: 'Uni lernen',
+      done: false,
+      important: false,
+      category: '',
+      color: '#0d6efd',
+      date: null,
+    }
+    const t2 = {
+      id: 2,
+      taskName: 'Einkaufen',
+      done: false,
+      important: false,
+      category: '',
+      color: '#0d6efd',
+      date: null,
+    }
 
-  it("Suchleiste filtert Tasks nach Name", async () => {
-    const t1 = { id: 1, taskName: "Uni lernen", done: false, important: false, category: "", color: "#0d6efd", date: null };
-    const t2 = { id: 2, taskName: "Einkaufen", done: false, important: false, category: "", color: "#0d6efd", date: null };
+    ;(globalThis as any).fetch = mockFetchRouter([
+      { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([t1, t2]) },
+      { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson([]) },
+    ])
 
-    (globalThis as any).fetch = mockFetchRouter([
-      { match: (u, m) => m === "GET" && u.includes("/tasks"), handle: () => resJson([t1, t2]) },
-      { match: (u, m) => m === "GET" && u.includes("/categories"), handle: () => resJson([]) },
-    ]);
+    await mountAndWait()
 
-    await mountAndWait();
+    await screen.findByText('Uni lernen')
+    await fireEvent.update(screen.getByPlaceholderText('Taskname eingeben…'), 'Uni')
+    await nextTick()
 
-    await screen.findByText("Uni lernen");
-    await fireEvent.update(screen.getByPlaceholderText("Taskname eingeben…"), "Uni");
-    await nextTick();
+    expect(screen.getByText('Uni lernen')).toBeInTheDocument()
+    expect(screen.queryByText('Einkaufen')).not.toBeInTheDocument()
+  })
 
-    expect(screen.getByText("Uni lernen")).toBeInTheDocument();
-    expect(screen.queryByText("Einkaufen")).not.toBeInTheDocument();
-  });
+  it('Kalender zeigt Dots wenn Tasks ein Datum haben', async () => {
+    const t = {
+      id: 1,
+      taskName: 'Mit Datum',
+      done: false,
+      important: false,
+      category: '',
+      color: '#198754',
+      date: '2026-01-10',
+    }
 
-  it("Kalender zeigt Dots wenn Tasks ein Datum haben", async () => {
-    const t = { id: 1, taskName: "Mit Datum", done: false, important: false, category: "", color: "#198754", date: "2026-01-10" };
+    ;(globalThis as any).fetch = mockFetchRouter([
+      { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([t]) },
+      { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson([]) },
+    ])
 
-    (globalThis as any).fetch = mockFetchRouter([
-      { match: (u, m) => m === "GET" && u.includes("/tasks"), handle: () => resJson([t]) },
-      { match: (u, m) => m === "GET" && u.includes("/categories"), handle: () => resJson([]) },
-    ]);
+    await mountAndWait()
 
-    await mountAndWait();
+    await screen.findByText('Mit Datum')
+    expect(document.querySelector('.dot')).not.toBeNull()
+  })
 
-    await screen.findByText("Mit Datum");
-    expect(document.querySelector(".dot")).not.toBeNull();
-  });
+  it('zeigt Fehlermeldung wenn Tasks laden fehlschlägt', async () => {
+    ;(globalThis as any).fetch = mockFetchRouter([
+      {
+        match: (u, m) => m === 'GET' && u.includes('/tasks'),
+        handle: () => resText('fail', false, 500),
+      },
+      { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson([]) },
+    ])
 
-  it("zeigt Fehlermeldung wenn Tasks laden fehlschlägt", async () => {
-    (globalThis as any).fetch = mockFetchRouter([
-      { match: (u, m) => m === "GET" && u.includes("/tasks"), handle: () => resText("fail", false, 500) },
-      { match: (u, m) => m === "GET" && u.includes("/categories"), handle: () => resJson([]) },
-    ]);
+    await mountAndWait()
 
-    await mountAndWait();
-
-    expect(await screen.findByText(/HTTP 500/i)).toBeInTheDocument();
-  });
+    expect(await screen.findByText(/HTTP 500/i)).toBeInTheDocument()
+  })
 
   it('toggle done sendet PATCH mit done=true', async () => {
-    const task = { id: 7, taskName: 'X', done: false, important: false, category: '', color: '#0d6efd', date: null }
+    const task = {
+      id: 7,
+      taskName: 'X',
+      done: false,
+      important: false,
+      category: '',
+      color: '#0d6efd',
+      date: null,
+    }
 
     const fetchMock = mockFetchRouter([
-      { match: (u,m) => m==='GET' && u.includes('/tasks'), handle: () => resJson([task]) },
-      { match: (u,m) => m==='GET' && u.includes('/categories'), handle: () => resJson([]) },
+      { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([task]) },
+      { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson([]) },
 
       // ✅ akzeptiert /tasks/7 UND /tasks/7/done?done=true
-      { match: (u,m) => m==='PATCH' && (u.includes('/tasks/7/done') || u.includes('/tasks/7')), handle: () => resJson({}) },
+      {
+        match: (u, m) => m === 'PATCH' && (u.includes('/tasks/7/done') || u.includes('/tasks/7')),
+        handle: () => resJson({}),
+      },
     ])
 
     ;(globalThis as any).fetch = fetchMock
 
     render(TodoList)
-    await flushPromises(); await nextTick(); await flushPromises(); await nextTick()
+    await flushPromises()
+    await nextTick()
+    await flushPromises()
+    await nextTick()
 
     const checkbox = screen.getAllByRole('checkbox')[0]
     await fireEvent.click(checkbox)
-    await flushPromises(); await nextTick()
+    await flushPromises()
+    await nextTick()
 
-    expect(fetchMock.mock.calls.some(c => {
-      const url = typeof c[0] === 'string' ? c[0] : (c[0]?.url ?? String(c[0]))
-      const method = String(c[1]?.method ?? 'GET').toUpperCase()
-      return method === 'PATCH' && (String(url).includes('/tasks/7/done') || String(url).includes('/tasks/7'))
-    })).toBe(true)
+    expect(
+      fetchMock.mock.calls.some((c) => {
+        const url = typeof c[0] === 'string' ? c[0] : (c[0]?.url ?? String(c[0]))
+        const method = String(c[1]?.method ?? 'GET').toUpperCase()
+        return (
+          method === 'PATCH' &&
+          (String(url).includes('/tasks/7/done') || String(url).includes('/tasks/7'))
+        )
+      }),
+    ).toBe(true)
   })
 
+  it('Kategorie löschen: wenn confirm=false -> kein DELETE Request', async () => {
+    const fetchMock = mockFetchRouter([
+      { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([]) },
+      { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson(['Uni']) },
 
-it('Kategorie löschen: wenn confirm=false -> kein DELETE Request', async () => {
-  const fetchMock = mockFetchRouter([
-    { match: (u, m) => m === 'GET' && u.includes('/tasks'), handle: () => resJson([]) },
-    { match: (u, m) => m === 'GET' && u.includes('/categories'), handle: () => resJson(['Uni']) },
+      // falls doch DELETE passiert, würde Router diesen Match nehmen
+      {
+        match: (u, m) => m === 'DELETE' && u.includes('/categories/Uni'),
+        handle: () => resJson({}, true, 204),
+      },
+    ])
+    ;(globalThis as any).fetch = fetchMock
 
-    // falls doch DELETE passiert, würde Router diesen Match nehmen
-    { match: (u, m) => m === 'DELETE' && u.includes('/categories/Uni'), handle: () => resJson({}, true, 204) },
-  ])
-  ;(globalThis as any).fetch = fetchMock
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
 
-  vi.spyOn(window, 'confirm').mockReturnValue(false)
+    render(TodoList)
+    await flushPromises()
+    await nextTick()
+    await flushPromises()
+    await nextTick()
 
-  render(TodoList)
-  await flushPromises(); await nextTick()
-  await flushPromises(); await nextTick()
+    // ✅ warten bis Option wirklich im DOM ist
+    await screen.findByRole('option', { name: 'Uni' })
 
-  // ✅ warten bis Option wirklich im DOM ist
-  await screen.findByRole('option', { name: 'Uni' })
+    // ✅ Kategorie-Select gezielt im "Kategorie"-Block holen
+    const categoryField = screen.getByText('Kategorie').closest('.wt-field')
+    if (!categoryField) throw new Error('Kategorie field not found')
 
-  // ✅ Kategorie-Select gezielt im "Kategorie"-Block holen
-  const categoryField = screen.getByText('Kategorie').closest('.wt-field')
-  if (!categoryField) throw new Error('Kategorie field not found')
+    const categorySelect = within(categoryField).getByRole('combobox')
+    await fireEvent.update(categorySelect, 'Uni')
+    await nextTick()
 
-  const categorySelect = within(categoryField).getByRole('combobox')
-  await fireEvent.update(categorySelect, 'Uni')
-  await nextTick()
+    const delBtn = within(categoryField).getByTitle('Kategorie löschen')
+    await fireEvent.click(delBtn)
 
-  const delBtn = within(categoryField).getByTitle('Kategorie löschen')
-  await fireEvent.click(delBtn)
+    await flushPromises()
+    await nextTick()
 
-  await flushPromises(); await nextTick()
-
-  // ✅ es darf KEIN DELETE call vorkommen
-  const anyDelete = fetchMock.mock.calls.some((c) => {
-    const url = String(c[0])
-    const method = String((c[1] as any)?.method ?? 'GET').toUpperCase()
-    return method === 'DELETE' && url.includes('/categories/Uni')
+    // ✅ es darf KEIN DELETE call vorkommen
+    const anyDelete = fetchMock.mock.calls.some((c) => {
+      const url = String(c[0])
+      const method = String((c[1] as any)?.method ?? 'GET').toUpperCase()
+      return method === 'DELETE' && url.includes('/categories/Uni')
+    })
+    expect(anyDelete).toBe(false)
   })
-  expect(anyDelete).toBe(false)
 })
-
-
-});
-

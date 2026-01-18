@@ -1,6 +1,6 @@
 export type ISODate = string // "YYYY-MM-DD"
 
-export interface Task {
+export type Task = {
   id: number
   taskName: string
   done: boolean
@@ -8,6 +8,9 @@ export interface Task {
   category?: string | null
   color?: string | null
   date?: ISODate | null
+
+  // optional, falls Backend manchmal "name" statt "taskName" liefert
+  name?: string
 }
 
 /**

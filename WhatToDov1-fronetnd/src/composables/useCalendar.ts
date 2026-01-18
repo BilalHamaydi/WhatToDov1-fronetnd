@@ -2,8 +2,18 @@ import { computed, ref } from 'vue'
 import type { ISODate } from '../types/task'
 
 export const MONTHS_DE = [
-  'Januar','Februar','März','April','Mai','Juni',
-  'Juli','August','September','Oktober','November','Dezember'
+  'Januar',
+  'Februar',
+  'März',
+  'April',
+  'Mai',
+  'Juni',
+  'Juli',
+  'August',
+  'September',
+  'Oktober',
+  'November',
+  'Dezember',
 ]
 
 export function toISO(d: Date): ISODate {
