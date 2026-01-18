@@ -24,6 +24,7 @@ Das Projekt enthält eine Aufgabenliste mit **Kategorien**, **Farben**, **Datum*
 - Vue 3 (Composition API)
 - Vite
 - TypeScript
+- H2 Test-Datenbank
 - Vitest + @testing-library/vue
 - Fetch API
 - CSS (scoped)
